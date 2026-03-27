@@ -1,0 +1,400 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Goals">
+<meta name="theme-color" content="#0f0f0f">
+<title>Goals</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0f0f0f;
+    --surface: #1a1a1a;
+    --surface2: #242424;
+    --border: rgba(255,255,255,0.08);
+    --text: #f0ede8;
+    --muted: rgba(240,237,232,0.4);
+    --hint: rgba(240,237,232,0.2);
+    --green: #4ade80;
+    --green-dim: rgba(74,222,128,0.12);
+    --green-border: rgba(74,222,128,0.3);
+    --red: #f87171;
+    --safe-top: env(safe-area-inset-top, 0px);
+    --safe-bottom: env(safe-area-inset-bottom, 0px);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+
+  html, body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    min-height: 100dvh;
+    overscroll-behavior: none;
+  }
+
+  .app {
+    max-width: 430px;
+    margin: 0 auto;
+    padding: calc(var(--safe-top) + 24px) 20px calc(var(--safe-bottom) + 120px);
+    min-height: 100dvh;
+  }
+
+  /* Header */
+  .header {
+    margin-bottom: 32px;
+  }
+  .header-top {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    margin-bottom: 20px;
+  }
+  .app-title {
+    font-family: 'DM Serif Display', serif;
+    font-size: 38px;
+    line-height: 1;
+    letter-spacing: -0.5px;
+    color: var(--text);
+  }
+  .date-pill {
+    font-size: 11px;
+    font-weight: 500;
+    color: var(--muted);
+    background: var(--surface);
+    border: 0.5px solid var(--border);
+    border-radius: 20px;
+    padding: 6px 12px;
+    margin-top: 6px;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+  }
+
+  /* Progress */
+  .progress-wrap {
+    background: var(--surface);
+    border: 0.5px solid var(--border);
+    border-radius: 16px;
+    padding: 16px 18px;
+  }
+  .progress-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    margin-bottom: 12px;
+  }
+  .progress-label { font-size: 12px; color: var(--muted); letter-spacing: 0.04em; text-transform: uppercase; }
+  .progress-frac { font-size: 13px; font-weight: 500; color: var(--green); }
+  .progress-track {
+    height: 3px;
+    background: var(--surface2);
+    border-radius: 2px;
+    overflow: hidden;
+  }
+  .progress-fill {
+    height: 3px;
+    background: var(--green);
+    border-radius: 2px;
+    transition: width 0.4s cubic-bezier(.4,0,.2,1);
+  }
+
+  /* Section */
+  .section { margin-bottom: 28px; }
+  .section-label {
+    font-size: 10px;
+    font-weight: 500;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 10px;
+    padding-left: 2px;
+  }
+
+  /* Goal cards */
+  .goal-list { display: flex; flex-direction: column; gap: 6px; margin-bottom: 8px; }
+
+  .goal-card {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    background: var(--surface);
+    border: 0.5px solid var(--border);
+    border-radius: 14px;
+    padding: 14px 16px;
+    cursor: pointer;
+    transition: background 0.15s, border-color 0.15s, opacity 0.2s;
+    user-select: none;
+    -webkit-user-select: none;
+    position: relative;
+    overflow: hidden;
+  }
+  .goal-card:active { background: var(--surface2); transform: scale(0.98); }
+  .goal-card.done {
+    background: var(--green-dim);
+    border-color: var(--green-border);
+  }
+
+  .check {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    border: 1.5px solid rgba(255,255,255,0.2);
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+  }
+  .goal-card.done .check {
+    background: var(--green);
+    border-color: var(--green);
+  }
+  .check svg { display: none; }
+  .goal-card.done .check svg { display: block; }
+
+  .goal-text {
+    flex: 1;
+    font-size: 15px;
+    font-weight: 400;
+    line-height: 1.4;
+    color: var(--text);
+    transition: color 0.2s;
+  }
+  .goal-card.done .goal-text {
+    color: var(--muted);
+    text-decoration: line-through;
+    text-decoration-color: rgba(74,222,128,0.4);
+  }
+
+  .del-btn {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    border: none;
+    background: transparent;
+    color: var(--hint);
+    font-size: 18px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    transition: color 0.15s, background 0.15s;
+    line-height: 1;
+  }
+  .del-btn:active { color: var(--red); background: rgba(248,113,113,0.1); }
+
+  /* Add row */
+  .add-row {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+  }
+  .add-input {
+    flex: 1;
+    height: 46px;
+    padding: 0 14px;
+    background: var(--surface);
+    border: 0.5px solid var(--border);
+    border-radius: 12px;
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px;
+    outline: none;
+    transition: border-color 0.15s;
+  }
+  .add-input::placeholder { color: var(--hint); }
+  .add-input:focus { border-color: rgba(255,255,255,0.2); }
+
+  .add-btn {
+    height: 46px;
+    width: 46px;
+    border-radius: 12px;
+    border: none;
+    background: var(--green);
+    color: #0f0f0f;
+    font-size: 22px;
+    font-weight: 300;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    transition: transform 0.1s, background 0.15s;
+  }
+  .add-btn:active { transform: scale(0.93); background: #22c55e; }
+
+  /* Empty hint */
+  .empty-hint {
+    font-size: 13px;
+    color: var(--hint);
+    padding: 4px 2px 8px;
+  }
+
+  /* Toast */
+  .toast {
+    position: fixed;
+    bottom: calc(var(--safe-bottom) + 20px);
+    left: 50%;
+    transform: translateX(-50%) translateY(80px);
+    background: var(--surface2);
+    border: 0.5px solid var(--border);
+    border-radius: 20px;
+    padding: 10px 20px;
+    font-size: 13px;
+    color: var(--text);
+    white-space: nowrap;
+    transition: transform 0.3s cubic-bezier(.4,0,.2,1), opacity 0.3s;
+    opacity: 0;
+    z-index: 999;
+    pointer-events: none;
+  }
+  .toast.show { transform: translateX(-50%) translateY(0); opacity: 1; }
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="header">
+    <div class="header-top">
+      <div class="app-title">Goals</div>
+      <div class="date-pill" id="date-pill"></div>
+    </div>
+    <div class="progress-wrap">
+      <div class="progress-row">
+        <span class="progress-label">Today's progress</span>
+        <span class="progress-frac" id="prog-frac">0 / 0</span>
+      </div>
+      <div class="progress-track">
+        <div class="progress-fill" id="prog-fill" style="width:0%"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-label">Health &amp; Fitness</div>
+    <div class="goal-list" id="health-list"></div>
+    <div class="add-row">
+      <input class="add-input" id="health-input" placeholder="Add a health goal..." />
+      <button class="add-btn" onclick="addGoal('health')" aria-label="Add">+</button>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-label">Personal Habits</div>
+    <div class="goal-list" id="habits-list"></div>
+    <div class="add-row">
+      <input class="add-input" id="habits-input" placeholder="Add a habit..." />
+      <button class="add-btn" onclick="addGoal('habits')" aria-label="Add">+</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const STORAGE_KEY = 'ww-goals-v1';
+let state = { health: [], habits: [] };
+let nextId = 1;
+
+function load() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      state = parsed.state || { health: [], habits: [] };
+      nextId = parsed.nextId || 1;
+    }
+  } catch(e) {}
+}
+
+function save() {
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify({ state, nextId }));
+  } catch(e) {}
+}
+
+function addGoal(section) {
+  const input = document.getElementById(section + '-input');
+  const text = input.value.trim();
+  if (!text) return;
+  state[section].push({ id: nextId++, text, done: false });
+  input.value = '';
+  save();
+  render();
+  input.focus();
+}
+
+function toggleGoal(section, id) {
+  const g = state[section].find(g => g.id === id);
+  if (!g) return;
+  g.done = !g.done;
+  save();
+  render();
+  if (g.done) showToast('Nice work! ✓');
+}
+
+function deleteGoal(section, id) {
+  state[section] = state[section].filter(g => g.id !== id);
+  save();
+  render();
+}
+
+function render() {
+  ['health', 'habits'].forEach(section => {
+    const list = document.getElementById(section + '-list');
+    const goals = state[section];
+    if (goals.length === 0) {
+      list.innerHTML = '';
+      return;
+    }
+    list.innerHTML = goals.map(g => `
+      <div class="goal-card ${g.done ? 'done' : ''}" onclick="toggleGoal('${section}', ${g.id})">
+        <div class="check">
+          <svg width="11" height="9" viewBox="0 0 11 9" fill="none">
+            <path d="M1 4.5L4 7.5L10 1" stroke="#0f0f0f" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </div>
+        <span class="goal-text">${escHtml(g.text)}</span>
+        <button class="del-btn" onclick="event.stopPropagation();deleteGoal('${section}',${g.id})" aria-label="Delete">×</button>
+      </div>
+    `).join('');
+  });
+
+  const all = [...state.health, ...state.habits];
+  const done = all.filter(g => g.done).length;
+  const total = all.length;
+  document.getElementById('prog-frac').textContent = done + ' / ' + total;
+  document.getElementById('prog-fill').style.width = total ? Math.round(done / total * 100) + '%' : '0%';
+}
+
+function escHtml(s) {
+  return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2000);
+}
+
+function setDate() {
+  const d = new Date();
+  const days = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+  const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  document.getElementById('date-pill').textContent = days[d.getDay()] + ' ' + months[d.getMonth()] + ' ' + d.getDate();
+}
+
+document.getElementById('health-input').addEventListener('keydown', e => { if (e.key === 'Enter') addGoal('health'); });
+document.getElementById('habits-input').addEventListener('keydown', e => { if (e.key === 'Enter') addGoal('habits'); });
+
+load();
+setDate();
+render();
+</script>
+</body>
+</html>
